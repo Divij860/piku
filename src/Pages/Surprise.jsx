@@ -1,13 +1,13 @@
 /**
  * 🎂 HAPPY BIRTHDAY PIKU 🎂
- * A magical, romantic, interactive birthday surprise experience
- * Built with React + Tailwind CSS + Framer Motion
+ * Updated: music plays by default, photo memory game added after hidden heart,
+ * react-icons used throughout instead of raw emoji strings in UI chrome.
  *
  * STAGES:
  * 0 - Welcome Screen
  * 1 - Relationship Quiz
  * 2 - Memory Meter (loading)
- * 3 - Mini Challenges
+ * 3 - Mini Challenges  (Hearts → Hidden Heart → Photo Gallery → Cake Catch)
  * 4 - Secret Messages
  * 5 - Love Meter
  * 6 - Countdown
@@ -15,16 +15,57 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import Zara from "../assets/music.webm";
 
-// ─── TAILWIND PALETTE TOKENS ─────────────────────────────────────────────────
-// Primary: rose-300 / rose-400 / rose-500
-// Accent: violet-300 / violet-400
-// Gold: yellow-300 / amber-300
-// Base: white / pink-50 / fuchsia-50
-// Glass: white/20 backdrop-blur
+// ─── REACT ICONS ──────────────────────────────────────────────────────────────
+import {
+  FaHeart,
+  FaHeartBroken,
+  FaStar,
+  FaCrown,
+  FaBirthdayCake,
+  FaGift,
+  FaMusic,
+  FaVolumeMute,
+  FaCamera,
+  FaImages,
+  FaLock,
+  FaLockOpen,
+  FaSmile,
+  FaMagic,
+  FaSistrix,
+  FaCheck,
+  FaTimes,
+  FaRedo,
+  FaPlay,
+} from "react-icons/fa";
+import {
+  GiSparkles,
+  GiCandleFlame,
+  GiDiamondRing,
+  GiFlowerEmblem,
+} from "react-icons/gi";
+import {
+  BsStarFill,
+  BsHeartFill,
+  BsEmojiHeartEyes,
+  BsEmojiSmile,
+  BsCameraFill,
+} from "react-icons/bs";
+import { IoRibbonSharp } from "react-icons/io5";
+import { MdCelebration } from "react-icons/md";
+import Pik1 from "../assets/pik1.jpeg";
+import Pik2 from "../assets/pik2.jpeg";
+import Pik3 from "../assets/pik3.jpeg";
+import Pik4 from "../assets/pik4.jpeg";
+import Pik5 from "../assets/pik5.jpeg";
+import Pik6 from "../assets/pik6.jpeg";
+import Pik7 from "../assets/pik7.jpeg";
+import Pik8 from "../assets/pik8.jpeg";
+import Pik9 from "../assets/pik9.jpeg";
+import Pik10 from "../assets/pik10.jpeg";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const QUIZ_QUESTIONS = [
@@ -34,7 +75,7 @@ const QUIZ_QUESTIONS = [
       { label: "Piku 👑", correct: true },
       { label: "Some random person 😜", correct: false },
     ],
-    tease: "Excuse me?! Today belongs entirely to Queen Piku 👑✨",
+    tease: "Excuse me?! Today belongs entirely to Queen Piku ✨",
   },
   {
     q: "Who is the cutest person in the world? 🥰",
@@ -42,8 +83,7 @@ const QUIZ_QUESTIONS = [
       { label: "Piku 💕", correct: true },
       { label: "Not Piku 🙈", correct: false },
     ],
-    tease:
-      "Wrong answer detected 🚨 The correct answer is Piku. Always Piku. 😌💖",
+    tease: "Wrong answer detected! The correct answer is Piku. Always Piku. 😌",
   },
   {
     q: "Who makes Divju smile the most? 😊",
@@ -59,7 +99,7 @@ const QUIZ_QUESTIONS = [
       { label: "Piku 🥳", correct: true },
       { label: "Divju 😂", correct: false },
     ],
-    tease: "Nice try 😆 Today is ALL about Piku! 🎂✨",
+    tease: "Nice try 😆 Today is ALL about Piku! ✨",
   },
   {
     q: "Who is the most precious person in Divju's life? 💎",
@@ -83,7 +123,7 @@ const QUIZ_QUESTIONS = [
       { label: "Piku 👑", correct: true },
       { label: "Divju 🤭", correct: false },
     ],
-    tease: "Nope! Today's spotlight belongs to the birthday girl ✨🎂",
+    tease: "Nope! Today's spotlight belongs to the birthday girl ✨",
   },
   {
     q: "What should Piku do after finishing this quiz? 😏",
@@ -91,25 +131,28 @@ const QUIZ_QUESTIONS = [
       { label: "Smile and enjoy her birthday 🥰", correct: true },
       { label: "Get angry at Divju 😂", correct: false },
     ],
-    tease: "Awww, birthday smiles only today! 💕🎂",
+    tease: "Awww, birthday smiles only today! 💕",
   },
 ];
 
 const LOADING_STEPS = [
-  "Scanning all memories... 🧠",
-  "Loading infinite love... 💖",
-  "Counting every hug... 🤗",
-  "Collecting cute moments... 📸",
-  "Calculating happiness levels... 📊",
-  "Almost ready... ✨",
+  "Scanning all memories...",
+  "Loading infinite love...",
+  "Counting every hug...",
+  "Collecting cute moments...",
+  "Calculating happiness levels...",
+  "Almost ready...",
 ];
 
 const SECRET_MESSAGES = [
-  { text: "Every day with you is my favourite day ❤️", icon: "❤️" },
-  { text: "You make ordinary moments feel magical ✨", icon: "✨" },
-  { text: "I smile because of you 😊", icon: "😊" },
-  { text: "You are my safe place 🤍", icon: "🤍" },
-  { text: "I am the luckiest person to have you 💕", icon: "💕" },
+  { text: "Every day with you is my favourite day ❤️", icon: <FaHeart /> },
+  { text: "You make ordinary moments feel magical ✨", icon: <GiSparkles /> },
+  { text: "I smile because of you 😊", icon: <BsEmojiSmile /> },
+  {
+    text: "You are my safe place 🤍",
+    icon: <FaHeartBroken style={{ color: "#f9a8d4" }} />,
+  },
+  { text: "I am the luckiest person to have you 💕", icon: <GiDiamondRing /> },
 ];
 
 const LOVE_METER_STEPS = [
@@ -141,6 +184,82 @@ const KONAMI = [
   "ArrowRight",
   "b",
   "a",
+];
+
+// ─── PHOTO MEMORIES DATA ──────────────────────────────────────────────────────
+// Replace the `placeholder` strings with actual image paths/URLs.
+// Each entry has a caption shown when the frame is "opened".
+const PHOTO_MEMORIES = [
+  {
+    id: 0,
+    caption: "The first time I knew you were special ✨",
+    placeholder: Pik1, 
+    emoji: "🌸",
+    color: "from-rose-300 to-pink-200",
+  },
+  {
+    id: 1,
+    caption: "That smile that melts everything 💖",
+    placeholder: Pik2,
+    emoji: "😊",
+    color: "from-violet-300 to-fuchsia-200",
+  },
+  {
+    id: 2,
+    caption: "My favourite kind of chaos 💕",
+    placeholder: Pik3,
+    emoji: "🎉",
+    color: "from-amber-200 to-yellow-100",
+  },
+  {
+    id: 3,
+    caption: "Silly moments are the best moments 😂",
+    placeholder: Pik4,
+    emoji: "🤣",
+    color: "from-teal-200 to-cyan-100",
+  },
+  {
+    id: 4,
+    caption: "You looked unreal here 👑",
+    placeholder: Pik5,
+    emoji: "👑",
+    color: "from-fuchsia-300 to-purple-200",
+  },
+  {
+    id: 5,
+    caption: "This one lives in my heart forever 🏠",
+    placeholder: Pik6,
+    emoji: "❤️",
+    color: "from-rose-400 to-pink-300",
+  },
+  {
+    id: 6,
+    caption: "Adventures are better with you 🌍",
+    placeholder: Pik7,
+    emoji: "🌍",
+    color: "from-violet-400 to-indigo-300",
+  },
+  {
+    id: 7,
+    caption: "You make every day brighter ☀️",
+    placeholder: Pik8,
+    emoji: "☀️",
+    color: "from-amber-400 to-yellow-300",
+  },
+  {
+    id: 8,
+    caption: "My heart is so full of you 💓",
+    placeholder: Pik9,
+    emoji: "💓",
+    color: "from-teal-400 to-cyan-300",
+  },
+  {
+    id: 9,
+    caption: "Here's to many more memories together 🥂",
+    placeholder: Pik10,
+    emoji: "🥂",
+    color: "from-fuchsia-400 to-purple-300",
+  },
 ];
 
 // ─── CONFETTI HELPERS ─────────────────────────────────────────────────────────
@@ -261,7 +380,7 @@ function GlassCard({ children, className = "" }) {
   );
 }
 
-// ─── CUSTOM CURSOR (Desktop) ──────────────────────────────────────────────────
+// ─── CUSTOM CURSOR ────────────────────────────────────────────────────────────
 function HeartCursor() {
   const cursorRef = useRef(null);
   useEffect(() => {
@@ -277,25 +396,20 @@ function HeartCursor() {
   return (
     <div
       ref={cursorRef}
-      className="pointer-events-none fixed z-[9999] hidden md:block -translate-x-1/2 -translate-y-1/2 text-rose-400 text-xl"
+      className="pointer-events-none fixed z-[9999] hidden md:flex -translate-x-1/2 -translate-y-1/2 text-rose-400 text-xl items-center justify-center"
       style={{ transition: "left 0.05s, top 0.05s" }}
     >
-      💗
+      <FaHeart className="text-rose-400" />
     </div>
   );
 }
 
-// ─── BACKGROUND GRADIENT ──────────────────────────────────────────────────────
+// ─── BACKGROUND ───────────────────────────────────────────────────────────────
 function Background({ queenMode }) {
   return (
     <div
-      className={`fixed inset-0 -z-10 transition-all duration-1000 ${
-        queenMode
-          ? "bg-gradient-to-br from-purple-900 via-fuchsia-800 to-yellow-600"
-          : "bg-gradient-to-br from-pink-200 via-rose-100 to-violet-200"
-      }`}
+      className={`fixed inset-0 -z-10 transition-all duration-1000 ${queenMode ? "bg-gradient-to-br from-purple-900 via-fuchsia-800 to-yellow-600" : "bg-gradient-to-br from-pink-200 via-rose-100 to-violet-200"}`}
     >
-      {/* Soft blobs */}
       <motion.div
         className="absolute top-0 left-0 w-96 h-96 bg-pink-300/30 rounded-full blur-3xl"
         animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
@@ -345,7 +459,6 @@ function StageWelcome({ onNext, titleClicks, onTitleClick }) {
         transition={{ duration: 0.9, type: "spring", bounce: 0.4 }}
         className="text-center z-20"
       >
-        {/* Main title — click 5× for easter egg */}
         <motion.h1
           className="text-4xl md:text-6xl font-black text-rose-500 drop-shadow-xl cursor-pointer select-none"
           whileTap={{ scale: 0.92 }}
@@ -359,7 +472,9 @@ function StageWelcome({ onNext, titleClicks, onTitleClick }) {
           }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          🎂 Happy Birthday PIKU 🎂
+          <FaBirthdayCake className="inline mr-2 mb-1" />
+          Happy Birthday PIKU
+          <FaBirthdayCake className="inline ml-2 mb-1" />
         </motion.h1>
 
         {titleClicks > 0 && titleClicks < 5 && (
@@ -398,26 +513,32 @@ function StageWelcome({ onNext, titleClicks, onTitleClick }) {
                 animate={{ scale: [1, 1.3, 1] }}
                 transition={{ duration: 0.8, repeat: Infinity }}
               >
-                ❤️
+                <FaHeart />
               </motion.span>
               Start the Journey
               <motion.span
                 animate={{ scale: [1, 1.3, 1] }}
                 transition={{ duration: 0.8, repeat: Infinity, delay: 0.4 }}
               >
-                ❤️
+                <FaHeart />
               </motion.span>
             </motion.button>
           </GlassCard>
         </motion.div>
 
-        {/* Floating hearts below button */}
         <motion.div className="mt-8 flex gap-3 justify-center text-2xl">
-          {["💖", "💗", "💓", "💘", "💝"].map((h, i) => (
+          {[
+            <FaHeart />,
+            <BsHeartFill />,
+            <FaHeart />,
+            <GiDiamondRing />,
+            <FaHeart />,
+          ].map((h, i) => (
             <motion.span
               key={i}
               animate={{ y: [0, -12, 0], opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 1.5, delay: i * 0.2, repeat: Infinity }}
+              className="text-rose-400"
             >
               {h}
             </motion.span>
@@ -464,13 +585,14 @@ function StageQuiz({ onNext }) {
         exit={{ opacity: 0, x: -60 }}
         className="w-full max-w-md"
       >
-        {/* Progress */}
         <div className="mb-6">
           <div className="flex justify-between text-sm text-rose-400 font-semibold mb-1">
             <span>
               Question {current + 1} / {QUIZ_QUESTIONS.length}
             </span>
-            <span>Score: {score} ❤️</span>
+            <span className="flex items-center gap-1">
+              Score: {score} <FaHeart className="text-rose-400" />
+            </span>
           </div>
           <div className="h-2 bg-white/30 rounded-full overflow-hidden">
             <motion.div
@@ -490,7 +612,6 @@ function StageQuiz({ onNext }) {
           >
             {q.q}
           </motion.h2>
-
           <div className="flex flex-col gap-4">
             {q.options.map((opt, i) => (
               <motion.button
@@ -517,9 +638,7 @@ function StageQuiz({ onNext }) {
                 <br />
                 <button
                   className="mt-2 text-xs underline text-fuchsia-600"
-                  onClick={() => {
-                    setTease(null);
-                  }}
+                  onClick={() => setTease(null)}
                 >
                   Okay okay, let me try again 😅
                 </button>
@@ -533,7 +652,7 @@ function StageQuiz({ onNext }) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// STAGE 2: MEMORY METER (Loading)
+// STAGE 2: MEMORY METER
 // ═════════════════════════════════════════════════════════════════════════════
 function StageMemory({ onNext }) {
   const [step, setStep] = useState(0);
@@ -562,21 +681,28 @@ function StageMemory({ onNext }) {
     );
   }, [pct]);
 
+  const stepIcons = [
+    <FaHeart />,
+    <FaHeart />,
+    <FaHeart />,
+    <FaCamera />,
+    <BsStarFill />,
+    <GiSparkles />,
+  ];
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
       <GlassCard className="w-full max-w-sm p-10 text-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="text-5xl mx-auto mb-6"
+          className="text-5xl mx-auto mb-6 flex justify-center text-fuchsia-400"
         >
-          💫
+          <GiSparkles size={48} />
         </motion.div>
         <h2 className="text-2xl font-bold text-rose-600 mb-6">
           Loading your surprise...
         </h2>
-
-        {/* Steps */}
         <div className="space-y-2 mb-8">
           {LOADING_STEPS.map((s, i) => (
             <motion.div
@@ -586,13 +712,29 @@ function StageMemory({ onNext }) {
               transition={{ delay: i * 0.2 }}
               className={`text-sm font-medium flex items-center gap-2 ${i <= step ? "text-rose-500" : "text-rose-300"}`}
             >
-              <span>{i < step ? "✅" : i === step ? "⏳" : "⬜"}</span>
+              <span className="text-base">
+                {i < step ? (
+                  <FaCheck className="text-green-400" />
+                ) : i === step ? (
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  >
+                    <GiSparkles />
+                  </motion.span>
+                ) : (
+                  <span className="w-3 h-3 block border border-rose-200 rounded-sm" />
+                )}
+              </span>
+              <span className="mr-1">{stepIcons[i]}</span>
               {s}
             </motion.div>
           ))}
         </div>
-
-        {/* Progress bar */}
         <div className="h-3 bg-white/30 rounded-full overflow-hidden">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-500"
@@ -608,10 +750,10 @@ function StageMemory({ onNext }) {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // STAGE 3: MINI CHALLENGES
+// Order: Hearts → Hidden Heart → Photo Gallery → Cake Catch
 // ═════════════════════════════════════════════════════════════════════════════
 function StageChallenges({ onNext }) {
   const [challenge, setChallenge] = useState(0);
-
   return (
     <AnimatePresence mode="wait">
       {challenge === 0 && (
@@ -620,11 +762,15 @@ function StageChallenges({ onNext }) {
       {challenge === 1 && (
         <ChallengeHidden key="c1" onDone={() => setChallenge(2)} />
       )}
-      {challenge === 2 && <ChallengeCake key="c2" onDone={onNext} />}
+      {challenge === 2 && (
+        <ChallengePhotoGallery key="c2" onDone={() => setChallenge(3)} />
+      )}
+      {challenge === 3 && <ChallengeCake key="c3" onDone={onNext} />}
     </AnimatePresence>
   );
 }
 
+// ─── Challenge 1: Tap Hearts ──────────────────────────────────────────────────
 function ChallengeHearts({ onDone }) {
   const [collected, setCollected] = useState(0);
   const TARGET = 10;
@@ -656,8 +802,8 @@ function ChallengeHearts({ onDone }) {
       className="min-h-screen flex flex-col items-center justify-center px-4 relative"
     >
       <GlassCard className="p-6 text-center mb-6 z-10">
-        <h2 className="text-2xl font-bold text-rose-600">
-          Tap the hearts to collect love! 💖
+        <h2 className="text-2xl font-bold text-rose-600 flex items-center justify-center gap-2">
+          <FaHeart className="text-rose-500" /> Tap the hearts to collect love!
         </h2>
         <p className="text-rose-400 mt-1">
           {collected} / {TARGET} collected
@@ -669,7 +815,6 @@ function ChallengeHearts({ onDone }) {
           />
         </div>
       </GlassCard>
-
       {hearts.map((h) =>
         h.alive ? (
           <motion.button
@@ -684,9 +829,9 @@ function ChallengeHearts({ onDone }) {
               repeat: Infinity,
               delay: Math.random(),
             }}
-            className="text-3xl cursor-pointer"
+            className="text-3xl cursor-pointer text-rose-400"
           >
-            💖
+            <FaHeart />
           </motion.button>
         ) : null,
       )}
@@ -694,15 +839,23 @@ function ChallengeHearts({ onDone }) {
   );
 }
 
+// ─── Challenge 2: Hidden Heart ────────────────────────────────────────────────
 function ChallengeHidden({ onDone }) {
   const [items] = useState(() => {
     const hiddenIdx = Math.floor(Math.random() * 12);
+    const decoys = [
+      <GiFlowerEmblem />,
+      <BsStarFill />,
+      <GiSparkles />,
+      <IoRibbonSharp />,
+      <MdCelebration />,
+      <GiCandleFlame />,
+      <GiFlowerEmblem />,
+      <BsStarFill />,
+    ];
     return Array.from({ length: 12 }, (_, i) => ({
       id: i,
-      emoji:
-        i === hiddenIdx
-          ? "💖"
-          : ["🌸", "⭐", "🌟", "💫", "🎈", "🎀", "🌺", "🍀"][i % 8],
+      icon: i === hiddenIdx ? <FaHeart /> : decoys[i % decoys.length],
       isHeart: i === hiddenIdx,
       x: 8 + (i % 4) * 23,
       y: 15 + Math.floor(i / 4) * 28,
@@ -718,8 +871,8 @@ function ChallengeHidden({ onDone }) {
       className="min-h-screen flex flex-col items-center justify-center px-4 relative"
     >
       <GlassCard className="p-6 text-center mb-6 z-10 w-full max-w-sm">
-        <h2 className="text-2xl font-bold text-rose-600">
-          Find the hidden heart! 🔍
+        <h2 className="text-2xl font-bold text-rose-600 flex items-center justify-center gap-2">
+          <FaSistrix /> Find the hidden heart!
         </h2>
         <p className="text-rose-400 mt-1">
           One special heart is hiding among the items...
@@ -746,9 +899,9 @@ function ChallengeHidden({ onDone }) {
             }}
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2 + Math.random() * 2, repeat: Infinity }}
-            className="text-3xl"
+            className={`text-3xl ${item.isHeart ? "text-rose-500" : "text-violet-400"}`}
           >
-            {item.emoji}
+            {item.icon}
           </motion.button>
         ))}
       </div>
@@ -759,9 +912,9 @@ function ChallengeHidden({ onDone }) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            className="mt-4 text-2xl font-bold text-rose-500"
+            className="mt-4 text-2xl font-bold text-rose-500 flex items-center gap-2"
           >
-            You found it! 💖✨
+            <FaHeart /> You found it! <GiSparkles />
           </motion.div>
         )}
       </AnimatePresence>
@@ -769,6 +922,227 @@ function ChallengeHidden({ onDone }) {
   );
 }
 
+// ─── Challenge 3: PHOTO MEMORY GALLERY (NEW) ──────────────────────────────────
+function ChallengePhotoGallery({ onDone }) {
+  const [unlockedIds, setUnlockedIds] = useState([]);
+  const [activePhoto, setActivePhoto] = useState(null);
+  const [allDone, setAllDone] = useState(false);
+
+  // Falling frame positions — each frame drifts down from top
+  const [frames] = useState(() =>
+    PHOTO_MEMORIES.map((m, i) => ({
+      ...m,
+      startX: 5 + (i % 3) * 30 + Math.random() * 10,
+      delay: i * 0.6,
+      fallDuration: 6 + Math.random() * 4,
+    })),
+  );
+
+  const unlock = (id) => {
+    if (unlockedIds.includes(id)) {
+      setActivePhoto(PHOTO_MEMORIES.find((p) => p.id === id));
+      return;
+    }
+    const next = [...unlockedIds, id];
+    setUnlockedIds(next);
+    setActivePhoto(PHOTO_MEMORIES.find((p) => p.id === id));
+    fireConfetti();
+    if (next.length >= PHOTO_MEMORIES.length) {
+      setAllDone(true);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="min-h-screen flex flex-col items-center justify-start px-4 pt-6 relative overflow-hidden"
+    >
+      {/* Header */}
+      <GlassCard className="p-5 text-center z-10 w-full max-w-sm mb-4">
+        <h2 className="text-2xl font-bold text-rose-600 flex items-center justify-center gap-2">
+          <FaImages className="text-fuchsia-500" /> Our Memory Gallery
+        </h2>
+        <p className="text-rose-400 mt-1 text-sm">
+          Tap the falling frames to unlock our memories!
+        </p>
+        <div className="flex items-center gap-2 mt-2 justify-center">
+          <span className="text-rose-500 font-bold">
+            {unlockedIds.length} / {PHOTO_MEMORIES.length}
+          </span>
+          <div className="flex-1 max-w-[120px] h-2 bg-white/30 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-fuchsia-400 to-rose-400"
+              style={{
+                width: `${(unlockedIds.length / PHOTO_MEMORIES.length) * 100}%`,
+              }}
+              transition={{ duration: 0.4 }}
+            />
+          </div>
+          <FaCamera className="text-rose-400" />
+        </div>
+      </GlassCard>
+
+      {/* Falling frames area */}
+      <div className="relative w-full max-w-sm h-64 overflow-hidden rounded-2xl bg-white/10 border border-white/30">
+        {frames.map((frame) => (
+          <motion.button
+            key={frame.id}
+            style={{ position: "absolute", left: `${frame.startX}%` }}
+            initial={{ y: -80 }}
+            animate={{ y: 280 }}
+            transition={{
+              duration: frame.fallDuration,
+              delay: frame.delay,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => unlock(frame.id)}
+            className="focus:outline-none"
+          >
+            <div
+              className={`relative w-16 h-20 bg-gradient-to-br ${frame.color} rounded-lg shadow-lg border-2 ${unlockedIds.includes(frame.id) ? "border-yellow-300" : "border-white/60"} flex flex-col items-center justify-center gap-1 p-1`}
+            >
+              {unlockedIds.includes(frame.id) ? (
+                <>
+                  {frame.placeholder ? (
+                    <img
+                      src={frame.placeholder}
+                      alt="memory"
+                      className="w-full h-12 object-cover rounded-md"
+                    />
+                  ) : (
+                    <div className="w-full h-12 bg-white/30 rounded-md flex items-center justify-center text-2xl">
+                      {frame.emoji}
+                    </div>
+                  )}
+                  <FaLockOpen className="text-yellow-400 text-xs" />
+                </>
+              ) : (
+                <>
+                  <FaCamera className="text-white/70 text-xl" />
+                  <FaLock className="text-white/50 text-xs" />
+                </>
+              )}
+            </div>
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Active photo viewer */}
+      <AnimatePresence>
+        {activePhoto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6"
+            onClick={() => setActivePhoto(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.5, rotate: -8 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0.5 }}
+              transition={{ type: "spring", bounce: 0.4 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-xs"
+            >
+              <GlassCard
+                className={`p-6 text-center bg-gradient-to-br ${activePhoto.color}`}
+              >
+                {/* Photo slot */}
+                <div className="w-full aspect-square bg-white/30 rounded-2xl flex flex-col items-center justify-center mb-4 border-2 border-white/50 overflow-hidden">
+                  {activePhoto.placeholder ? (
+                    <img
+                      src={activePhoto.placeholder}
+                      alt="memory"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-6xl">{activePhoto.emoji}</span>
+                      <p className="text-white/60 text-xs px-4 text-center">
+                        Add your photo here in the code! 📸
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {/* Caption */}
+                <motion.p
+                  className="text-white font-bold text-base drop-shadow-md"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {activePhoto.caption}
+                </motion.p>
+                <motion.div className="flex justify-center gap-1 mt-2 text-rose-200">
+                  {[0, 1, 2].map((i) => (
+                    <motion.span
+                      key={i}
+                      animate={{ scale: [1, 1.3, 1] }}
+                      transition={{
+                        delay: i * 0.2,
+                        duration: 0.8,
+                        repeat: Infinity,
+                      }}
+                    >
+                      <FaHeart size={12} />
+                    </motion.span>
+                  ))}
+                </motion.div>
+                <button
+                  onClick={() => setActivePhoto(null)}
+                  className="mt-4 bg-white/30 text-white font-semibold px-5 py-2 rounded-xl text-sm flex items-center gap-2 mx-auto"
+                >
+                  <FaTimes size={12} /> Close
+                </button>
+              </GlassCard>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Continue button after all unlocked */}
+      <AnimatePresence>
+        {allDone && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-6 z-10"
+          >
+            <GlassCard className="p-4 text-center">
+              <p className="text-rose-600 font-bold mb-3 flex items-center justify-center gap-2">
+                <GiSparkles /> All memories unlocked!
+              </p>
+              <motion.button
+                onClick={onDone}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-gradient-to-r from-rose-400 to-fuchsia-500 text-white font-bold px-6 py-3 rounded-2xl shadow-lg flex items-center gap-2 mx-auto"
+              >
+                <FaPlay size={12} /> Continue
+              </motion.button>
+            </GlassCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Hint if not all done */}
+      {!allDone && (
+        <p className="mt-4 text-rose-400/60 text-xs z-10 text-center">
+          Keep tapping frames as they fall to unlock all {PHOTO_MEMORIES.length}{" "}
+          memories...
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Challenge 4: Cake Catch ──────────────────────────────────────────────────
 function ChallengeCake({ onDone }) {
   const [cakeX, setCakeX] = useState(50);
   const [score, setScore] = useState(0);
@@ -806,8 +1180,8 @@ function ChallengeCake({ onDone }) {
       className="min-h-screen flex flex-col items-center justify-center px-4"
     >
       <GlassCard className="p-6 text-center mb-8 w-full max-w-sm">
-        <h2 className="text-2xl font-bold text-rose-600">
-          Catch the birthday cake! 🎂
+        <h2 className="text-2xl font-bold text-rose-600 flex items-center justify-center gap-2">
+          <FaBirthdayCake /> Catch the birthday cake!
         </h2>
         <p className="text-rose-400 mt-1">
           {score} / {TARGET} caught
@@ -819,7 +1193,6 @@ function ChallengeCake({ onDone }) {
           />
         </div>
       </GlassCard>
-
       <div className="relative w-full max-w-sm h-32 bg-white/10 rounded-3xl overflow-hidden border border-white/30">
         <motion.button
           style={{
@@ -830,9 +1203,9 @@ function ChallengeCake({ onDone }) {
           }}
           onClick={catchCake}
           whileTap={{ scale: 0.7 }}
-          className="text-4xl cursor-pointer"
+          className="text-4xl cursor-pointer text-rose-500"
         >
-          🎂
+          <FaBirthdayCake />
         </motion.button>
       </div>
     </motion.div>
@@ -860,8 +1233,9 @@ function StageMessages({ onNext }) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <h2 className="text-3xl font-bold text-rose-600 mb-10 text-center">
-        A few things I want you to know... 💌
+      <h2 className="text-3xl font-bold text-rose-600 mb-10 text-center flex items-center gap-2 justify-center">
+        <FaMagic className="text-fuchsia-500" /> A few things I want you to
+        know...
       </h2>
       <div className="w-full max-w-md space-y-4">
         {SECRET_MESSAGES.map((msg, i) => (
@@ -873,7 +1247,7 @@ function StageMessages({ onNext }) {
                 transition={{ type: "spring", bounce: 0.4 }}
               >
                 <GlassCard className="p-5 flex items-center gap-4">
-                  <span className="text-3xl">{msg.icon}</span>
+                  <span className="text-3xl text-rose-400">{msg.icon}</span>
                   <p className="text-rose-700 font-semibold text-base">
                     {msg.text}
                   </p>
@@ -916,17 +1290,16 @@ function StageLoveMeter({ onNext }) {
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
       <GlassCard className="w-full max-w-sm p-10 text-center">
         <motion.div
-          className="text-5xl mb-4"
+          className="text-5xl mb-4 flex justify-center text-rose-500"
           animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
           transition={{ duration: 0.6, repeat: Infinity }}
         >
-          ❤️
+          <FaHeart size={52} />
         </motion.div>
         <h2 className="text-2xl font-bold text-rose-600 mb-2">Love Meter</h2>
         <p className="text-rose-400 text-sm mb-6">
           Measuring how much I love Piku...
         </p>
-
         <div className="relative h-5 bg-white/30 rounded-full overflow-hidden mb-3">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-400 to-violet-500"
@@ -941,7 +1314,6 @@ function StageLoveMeter({ onNext }) {
             />
           )}
         </div>
-
         <motion.p
           key={current.label}
           initial={{ scale: 0.5, opacity: 0 }}
@@ -950,7 +1322,6 @@ function StageLoveMeter({ onNext }) {
         >
           {current.label}
         </motion.p>
-
         <AnimatePresence>
           {overflow && (
             <motion.div
@@ -958,7 +1329,7 @@ function StageLoveMeter({ onNext }) {
               animate={{ opacity: 1, y: 0 }}
               className="mt-6 p-4 bg-red-100/50 border border-rose-300 rounded-2xl text-rose-600 font-bold text-sm"
             >
-              🚨 ERROR: Love exceeds all measurable limits.
+              ERROR: Love exceeds all measurable limits.
               <br />
               System has crashed due to too much Piku. 💕
             </motion.div>
@@ -1009,9 +1380,9 @@ function StageCountdown({ onNext }) {
             key="go"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-5xl font-black text-yellow-300"
+            className="text-5xl font-black text-yellow-300 flex items-center gap-3"
           >
-            🎉 SURPRISE! 🎉
+            <MdCelebration /> SURPRISE! <MdCelebration />
           </motion.div>
         )}
       </AnimatePresence>
@@ -1043,21 +1414,45 @@ function StageFinal() {
     setTimeout(() => setShowInner(true), 700);
   };
 
-  const balloons = ["🎈", "🎀", "🎊", "🎁", "🌟", "💖", "🎂", "✨", "🥳", "👑"];
+  const balloonIcons = [
+    <FaHeart />,
+    <IoRibbonSharp />,
+    <MdCelebration />,
+    <FaGift />,
+    <BsStarFill />,
+    <FaHeart />,
+    <FaBirthdayCake />,
+    <GiSparkles />,
+    <BsEmojiHeartEyes />,
+    <FaCrown />,
+  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10 relative overflow-hidden">
-      {/* Floating balloons */}
-      {balloons.map((b, i) => (
-        <FloatingParticle
+      {balloonIcons.map((b, i) => (
+        <motion.div
           key={i}
-          emoji={b}
-          x={5 + i * 9}
-          y={2 + (i % 3) * 8}
-          duration={3 + i * 0.3}
-          delay={i * 0.15}
-          size={28 + (i % 3) * 6}
-        />
+          className="absolute text-rose-400 text-2xl pointer-events-none z-10"
+          style={{
+            left: `${5 + i * 9}%`,
+            top: `${2 + (i % 3) * 8}%`,
+            fontSize: 28 + (i % 3) * 6,
+          }}
+          animate={{
+            y: [0, -30, 0],
+            x: [0, 10, -10, 0],
+            rotate: [0, 15, -15, 0],
+            opacity: [0.6, 1, 0.6],
+          }}
+          transition={{
+            duration: 3 + i * 0.3,
+            delay: i * 0.15,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          {b}
+        </motion.div>
       ))}
 
       <SparkleRing />
@@ -1068,18 +1463,18 @@ function StageFinal() {
         transition={{ duration: 1, type: "spring", bounce: 0.3 }}
         className="w-full max-w-lg text-center z-20"
       >
-        {/* Main title */}
         <motion.h1
-          className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-fuchsia-500 to-violet-600 mb-2"
+          className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-fuchsia-500 to-violet-600 mb-2 flex items-center justify-center gap-3 flex-wrap"
           animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
           transition={{ duration: 4, repeat: Infinity }}
           style={{ backgroundSize: "200%" }}
         >
-          🎉 HAPPY BIRTHDAY PIKU 🎉
+          <MdCelebration className="text-rose-500" />
+          HAPPY BIRTHDAY PIKU
+          <MdCelebration className="text-fuchsia-500" />
         </motion.h1>
 
         <GlassCard className="p-8 md:p-12 mt-6">
-          {/* Message */}
           <TypewriterText
             text="Among all the beautiful things in my life, you are my favourite."
             className="text-lg md:text-xl text-rose-700 font-semibold leading-relaxed"
@@ -1092,15 +1487,14 @@ function StageFinal() {
             Thank you for being you.
           </p>
           <motion.p
-            className="mt-4 text-2xl font-black text-rose-500"
+            className="mt-4 text-2xl font-black text-rose-500 flex items-center justify-center gap-2"
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ duration: 1.2, repeat: Infinity }}
           >
-            I love you ❤️
+            I love you <FaHeart className="text-red-500" />
           </motion.p>
         </GlassCard>
 
-        {/* Gift box */}
         <motion.div
           className="mt-10"
           initial={{ scale: 0 }}
@@ -1110,7 +1504,7 @@ function StageFinal() {
           {!giftOpen ? (
             <div className="text-center">
               <p className="text-rose-500 font-semibold mb-4">
-                One last thing... tap to open! 🎁
+                One last thing... tap to open!
               </p>
               <motion.button
                 onClick={openGift}
@@ -1118,9 +1512,9 @@ function StageFinal() {
                 whileTap={{ scale: 0.9 }}
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
-                className="text-7xl"
+                className="text-7xl text-rose-400 flex justify-center mx-auto"
               >
-                🎁
+                <FaGift size={72} />
               </motion.button>
             </div>
           ) : (
@@ -1131,11 +1525,12 @@ function StageFinal() {
             >
               <GlassCard className="p-8 text-center border-2 border-yellow-300/60 bg-gradient-to-br from-yellow-50/40 to-rose-50/40">
                 <motion.p
-                  className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-rose-500"
+                  className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-rose-500 flex items-center justify-center gap-2 flex-wrap"
                   animate={{ scale: [1, 1.08, 1] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 >
-                  💖 YOU ARE MY GREATEST GIFT 💖
+                  <FaHeart className="text-rose-500" /> YOU ARE MY GREATEST GIFT{" "}
+                  <FaHeart className="text-rose-500" />
                 </motion.p>
                 {showInner && (
                   <motion.div
@@ -1144,7 +1539,8 @@ function StageFinal() {
                     transition={{ delay: 0.3 }}
                     className="mt-4 text-rose-600 font-semibold"
                   >
-                    Every day with you is a gift I never want to return. 🎀
+                    Every day with you is a gift I never want to return.{" "}
+                    <IoRibbonSharp className="inline text-fuchsia-400" />
                   </motion.div>
                 )}
               </GlassCard>
@@ -1152,14 +1548,21 @@ function StageFinal() {
           )}
         </motion.div>
 
-        {/* Final hearts */}
         <motion.div
-          className="mt-8 flex justify-center gap-3 text-3xl"
+          className="mt-8 flex justify-center gap-3 text-3xl text-rose-400"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2 }}
         >
-          {["💖", "💗", "💓", "💕", "💘", "💝", "💞"].map((h, i) => (
+          {[
+            <FaHeart />,
+            <BsHeartFill />,
+            <FaHeart />,
+            <GiDiamondRing />,
+            <FaHeart />,
+            <BsHeartFill />,
+            <FaHeart />,
+          ].map((h, i) => (
             <motion.span
               key={i}
               animate={{ y: [0, -20, 0], scale: [1, 1.3, 1] }}
@@ -1177,9 +1580,9 @@ function StageFinal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2.5 }}
-          className="mt-8 bg-gradient-to-r from-rose-400 to-fuchsia-500 text-white font-bold px-8 py-3 rounded-2xl shadow-xl text-base"
+          className="mt-8 bg-gradient-to-r from-rose-400 to-fuchsia-500 text-white font-bold px-8 py-3 rounded-2xl shadow-xl text-base flex items-center gap-2 mx-auto"
         >
-          🎉 Celebrate Again!
+          <MdCelebration /> Celebrate Again!
         </motion.button>
       </motion.div>
     </div>
@@ -1206,7 +1609,7 @@ function TypewriterText({ text, className }) {
   );
 }
 
-// ─── EASTER EGG: SECRET MESSAGE MODAL ────────────────────────────────────────
+// ─── EASTER EGG MODAL ─────────────────────────────────────────────────────────
 function EasterEggModal({ onClose }) {
   return (
     <motion.div
@@ -1224,7 +1627,10 @@ function EasterEggModal({ onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <GlassCard className="p-10 text-center max-w-sm">
-          <p className="text-4xl mb-4">🤫</p>
+          <FaLockOpen
+            className="text-4xl text-fuchsia-400 mx-auto mb-4"
+            size={40}
+          />
           <h3 className="text-xl font-black text-rose-600 mb-3">
             You Found the Secret!
           </h3>
@@ -1234,9 +1640,9 @@ function EasterEggModal({ onClose }) {
           </p>
           <button
             onClick={onClose}
-            className="mt-6 bg-rose-400 text-white font-bold px-6 py-2 rounded-xl"
+            className="mt-6 bg-rose-400 text-white font-bold px-6 py-2 rounded-xl flex items-center gap-2 mx-auto"
           >
-            Close 💕
+            <FaHeart size={12} /> Close
           </button>
         </GlassCard>
       </motion.div>
@@ -1264,13 +1670,13 @@ function QueenModeModal({ onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <GlassCard className="p-10 text-center max-w-sm border-yellow-300/60 bg-gradient-to-br from-purple-900/60 to-yellow-900/60">
-          <motion.p
-            className="text-6xl mb-2"
+          <motion.div
+            className="flex justify-center mb-2"
             animate={{ rotate: [0, 15, -15, 0] }}
             transition={{ duration: 1, repeat: Infinity }}
           >
-            👑
-          </motion.p>
+            <FaCrown size={60} className="text-yellow-300" />
+          </motion.div>
           <h3 className="text-2xl font-black text-yellow-300 mb-2">
             PIKU QUEEN MODE ACTIVATED
           </h3>
@@ -1278,8 +1684,14 @@ function QueenModeModal({ onClose }) {
             You unlocked the secret! Piku is officially crowned the Queen of my
             heart 👑💜
           </p>
-          <div className="flex justify-center gap-2 mt-4 text-2xl">
-            {["👑", "✨", "💜", "👑", "✨"].map((e, i) => (
+          <div className="flex justify-center gap-2 mt-4 text-2xl text-yellow-300">
+            {[
+              <FaCrown />,
+              <GiSparkles />,
+              <FaHeart />,
+              <FaCrown />,
+              <GiSparkles />,
+            ].map((e, i) => (
               <motion.span
                 key={i}
                 animate={{ y: [0, -10, 0] }}
@@ -1291,9 +1703,9 @@ function QueenModeModal({ onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="mt-6 bg-yellow-400 text-purple-900 font-black px-6 py-2 rounded-xl"
+            className="mt-6 bg-yellow-400 text-purple-900 font-black px-6 py-2 rounded-xl flex items-center gap-2 mx-auto"
           >
-            Long Live the Queen! 👑
+            <FaCrown size={14} /> Long Live the Queen!
           </button>
         </GlassCard>
       </motion.div>
@@ -1302,7 +1714,6 @@ function QueenModeModal({ onClose }) {
 }
 
 // ─── MUSIC TOGGLE ─────────────────────────────────────────────────────────────
-// Note: A real audio source would be needed. This toggles a placeholder.
 function MusicToggle({ playing, onToggle }) {
   return (
     <motion.button
@@ -1316,11 +1727,12 @@ function MusicToggle({ playing, onToggle }) {
         <motion.span
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ repeat: Infinity, duration: 0.8 }}
+          className="flex items-center"
         >
-          🎵
+          <FaMusic size={18} />
         </motion.span>
       ) : (
-        "🔇"
+        <FaVolumeMute size={18} />
       )}
     </motion.button>
   );
@@ -1337,8 +1749,39 @@ export default function Surprise() {
   const [musicPlaying, setMusicPlaying] = useState(true);
   const konamiRef = useRef([]);
   const audioRef = useRef(null);
+  const hasTriedAutoplay = useRef(false);
 
-  // ── Konami code detector ──
+  // ── Autoplay music on first user interaction ──
+  useEffect(() => {
+    const tryPlay = () => {
+      if (!hasTriedAutoplay.current && audioRef.current) {
+        hasTriedAutoplay.current = true;
+        audioRef.current.volume = 0.5;
+        audioRef.current.play().catch(() => {
+          // Autoplay blocked — wait for user gesture
+        });
+      }
+    };
+
+    // Try immediately (works if page was already interacted with)
+    tryPlay();
+
+    // Fallback: play on first touch/click
+    const handleFirst = () => {
+      if (audioRef.current && !audioRef.current.paused) return;
+      if (audioRef.current && musicPlaying) {
+        audioRef.current.play().catch(() => {});
+      }
+    };
+    window.addEventListener("click", handleFirst, { once: true });
+    window.addEventListener("touchstart", handleFirst, { once: true });
+    return () => {
+      window.removeEventListener("click", handleFirst);
+      window.removeEventListener("touchstart", handleFirst);
+    };
+  }, []);
+
+  // ── Konami code ──
   useEffect(() => {
     const handleKey = (e) => {
       konamiRef.current = [...konamiRef.current, e.key].slice(-10);
@@ -1351,7 +1794,6 @@ export default function Surprise() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  // ── Title click easter egg ──
   const handleTitleClick = () => {
     setTitleClicks((c) => {
       const n = c + 1;
@@ -1363,14 +1805,16 @@ export default function Surprise() {
     });
   };
 
-  // ── Navigation ──
   const next = useCallback(() => setStage((s) => s + 1), []);
 
-  // ── Music toggle (demo) ──
   const toggleMusic = () => {
     setMusicPlaying((p) => {
       if (audioRef.current) {
-        p ? audioRef.current.pause() : audioRef.current.play().catch(() => {});
+        if (p) {
+          audioRef.current.pause();
+        } else {
+          audioRef.current.play().catch(() => {});
+        }
       }
       return !p;
     });
@@ -1378,18 +1822,11 @@ export default function Surprise() {
 
   return (
     <div className="relative min-h-screen font-sans cursor-none md:cursor-none overflow-x-hidden">
-      {/* Custom heart cursor — desktop only */}
       <HeartCursor />
-
-      {/* Animated background */}
       <Background queenMode={queenMode} />
-
-      {/* Music toggle */}
       <MusicToggle playing={musicPlaying} onToggle={toggleMusic} />
-      {/* Hidden audio element — swap src for a real audio file */}
       <audio ref={audioRef} loop src={Zara} />
 
-      {/* Stage transitions */}
       <AnimatePresence mode="wait">
         <motion.div
           key={stage}
@@ -1415,24 +1852,12 @@ export default function Surprise() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Easter egg modals */}
       <AnimatePresence>
         {showEasterEgg && (
           <EasterEggModal onClose={() => setShowEasterEgg(false)} />
         )}
         {queenMode && <QueenModeModal onClose={() => setQueenMode(false)} />}
       </AnimatePresence>
-
-      {/* Stage skip dots (dev helper — remove for production) */}
-      {/* Uncomment if you want quick stage navigation during testing:
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-40">
-        {Array.from({length:8},(_,i)=>(
-          <button key={i} onClick={()=>setStage(i)}
-            className={`w-2 h-2 rounded-full transition-all ${stage===i?'bg-rose-500 scale-125':'bg-rose-200'}`}
-          />
-        ))}
-      </div>
-      */}
     </div>
   );
 }
