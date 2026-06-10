@@ -80,8 +80,8 @@ const QUIZ_QUESTIONS = [
   {
     q: "Who is the cutest person in the world? 🥰",
     options: [
-      { label: "Piku 💕", correct: true },
       { label: "Not Piku 🙈", correct: false },
+      { label: "Piku 💕", correct: true },
     ],
     tease: "Wrong answer detected! The correct answer is Piku. Always Piku. 😌",
   },
@@ -96,8 +96,8 @@ const QUIZ_QUESTIONS = [
   {
     q: "Who deserves unlimited hugs, gifts, and cake today? 🎁🍰",
     options: [
-      { label: "Piku 🥳", correct: true },
       { label: "Divju 😂", correct: false },
+      { label: "Piku 🥳", correct: true },
     ],
     tease: "Nice try 😆 Today is ALL about Piku! ✨",
   },
@@ -112,8 +112,8 @@ const QUIZ_QUESTIONS = [
   {
     q: "Who does Divju love the most? 💕",
     options: [
-      { label: "Piku ❤️", correct: true },
       { label: "Chocolate 🍫", correct: false },
+      { label: "Piku ❤️", correct: true },
     ],
     tease: "Chocolate is great, but Piku wins every single time 😘",
   },
@@ -128,8 +128,8 @@ const QUIZ_QUESTIONS = [
   {
     q: "What should Piku do after finishing this quiz? 😏",
     options: [
-      { label: "Smile and enjoy her birthday 🥰", correct: true },
       { label: "Get angry at Divju 😂", correct: false },
+      { label: "Smile and enjoy her birthday 🥰", correct: true },
     ],
     tease: "Awww, birthday smiles only today! 💕",
   },
@@ -193,7 +193,7 @@ const PHOTO_MEMORIES = [
   {
     id: 0,
     caption: "The first time I knew you were special ✨",
-    placeholder: Pik1, 
+    placeholder: Pik1,
     emoji: "🌸",
     color: "from-rose-300 to-pink-200",
   },
@@ -425,6 +425,127 @@ function Background({ queenMode }) {
         animate={{ scale: [1, 1.3, 1] }}
         transition={{ duration: 6, repeat: Infinity }}
       />
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// STAGE -1: PASSWORD GATE
+// ═══════════════════════════════════════════════════════
+function StagePassword({ onNext }) {
+  const [value, setValue] = useState("");
+  const [error, setError] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+
+  const check = () => {
+    if (value.trim().toLowerCase() === "pikuse") {
+      setUnlocked(true);
+      fireConfetti();
+      setTimeout(onNext, 1400);
+    } else {
+      setError(true);
+      setValue("");
+      const next = attempts + 1;
+      setAttempts(next);
+      if (next >= 2) setShowHint(true);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: "spring", bounce: 0.4 }}
+        className="w-full max-w-sm"
+      >
+        <GlassCard className="p-10 text-center">
+          <motion.div
+            className="flex justify-center gap-3 text-3xl text-rose-400 mb-6"
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <FaHeart /> <FaGift /> <FaHeart />
+          </motion.div>
+
+          <h2 className="text-2xl font-bold text-rose-600 mb-1">
+            Before we begin... 🤫
+          </h2>
+          <p className="text-rose-400 text-sm mb-6">
+            Only the most special person knows the answer to this.
+          </p>
+
+          {!unlocked ? (
+            <>
+              <p className="text-rose-700 font-semibold text-lg mb-5 leading-relaxed">
+                What does Divju call you that nobody else does? 💕
+              </p>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={value}
+                  onChange={(e) => {
+                    setValue(e.target.value);
+                    setError(false);
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && check()}
+                  placeholder="One word..."
+                  className="flex-1 bg-white/40 border border-white/60 rounded-xl px-4 py-3 text-center text-rose-700 font-semibold placeholder-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300 tracking-widest text-lg"
+                  autoComplete="off"
+                />
+                <motion.button
+                  onClick={check}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-rose-400 to-fuchsia-500 text-white px-4 py-3 rounded-xl font-bold"
+                >
+                  <FaHeart />
+                </motion.button>
+              </div>
+
+              <AnimatePresence>
+                {error && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-4 text-rose-500 text-sm bg-rose-100/50 rounded-xl px-4 py-2"
+                  >
+                    Hmm, that doesn't seem right... try again? 🥺
+                  </motion.p>
+                )}
+              </AnimatePresence>
+
+              {showHint && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-3 text-rose-400 text-xs"
+                >
+                  Hint: It starts with P and ends with your name... 💕
+                </motion.p>
+              )}
+            </>
+          ) : (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", bounce: 0.5 }}
+            >
+              <p className="text-3xl mb-2">🎉</p>
+              <p className="text-xl font-bold text-rose-600">
+                That's right! 💕
+              </p>
+              <p className="text-rose-400 text-sm mt-1">
+                Unlocking your surprise...
+              </p>
+            </motion.div>
+          )}
+        </GlassCard>
+      </motion.div>
     </div>
   );
 }
@@ -1742,7 +1863,7 @@ function MusicToggle({ playing, onToggle }) {
 // MAIN COMPONENT
 // ═════════════════════════════════════════════════════════════════════════════
 export default function Surprise() {
-  const [stage, setStage] = useState(0);
+  const [stage, setStage] = useState(-1); // ← was 0
   const [titleClicks, setTitleClicks] = useState(0);
   const [showEasterEgg, setShowEasterEgg] = useState(false);
   const [queenMode, setQueenMode] = useState(false);
@@ -1835,13 +1956,15 @@ export default function Surprise() {
           exit={{ opacity: 0, y: -30 }}
           transition={{ duration: 0.5 }}
         >
-          {stage === 0 && (
+          
+          {stage === -1 && (
             <StageWelcome
               onNext={next}
               titleClicks={titleClicks}
               onTitleClick={handleTitleClick}
             />
           )}
+          {stage === 0 && <StagePassword onNext={next} />}
           {stage === 1 && <StageQuiz onNext={next} />}
           {stage === 2 && <StageMemory onNext={next} />}
           {stage === 3 && <StageChallenges onNext={next} />}
